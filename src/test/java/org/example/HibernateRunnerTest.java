@@ -1,7 +1,9 @@
 package org.example;
 
+import lombok.Cleanup;
 import lombok.SneakyThrows;
-import org.example.entity.Customers;
+import org.example.entity.*;
+import org.example.util.HibernateUtil;
 import org.junit.jupiter.api.Test;
 
 import javax.persistence.Column;
@@ -17,18 +19,79 @@ import java.util.stream.Collectors;
 
 
 class HibernateRunnerTest {
+
 //    @Test
-//    @SneakyThrows
-//    /*
-//    Так работает Hibernate
-//     */
-//    public void testHibernateAPI() {
+    // a - стоимость тарифа, b - размер тарифа, c - стоимость каждого лишнего мгбт, d - размер трафика
+//    void paymentTraffik(int a, int b, int c, int d) {
+//        return b < d ? a : a + (c * (b - d));
+//    }
+
+//    @Test
+//    void testPancake(int n) {
+//        int result = 0;
+//        while (n != 0) {
+//            n = n / 2;
+//            result += 1;
+//        }
+//        return result;
+//    }
+
+
+    @Test
+    void addNewCustomerAndOrder() {
+        @Cleanup
+        var sessionFactory = HibernateUtil.buildSessionFactory();
+        @Cleanup
+        var session = sessionFactory.openSession();
+        session.beginTransaction();
+
+        var customers = Customers.builder()
+                .fullName("Василий gdg")
+                .customersInfo(CustomersInfo.builder()
+                        .registeredAt(new Registered(LocalDate.now()))
+                        .city("Гомель")
+                        .email("reklwos@gmail.com")
+                        .build())
+                .id(19L)
+                .role(Role.ADMIN)
+                .build();
+
+        var order = Order.builder()
+                .status(Status.delivered)
+                .orderDate(LocalDate.now())
+                .totalAmount(null)
+                .customer(customers)
+                .build();
+
+        session.getTransaction().commit();
+    }
+
+    @Test
+    void checkOneToMany() {
+        @Cleanup
+        var sessionFactory = HibernateUtil.buildSessionFactory();
+        @Cleanup
+        var session = sessionFactory.openSession();
+
+        session.beginTransaction();
+        var user = session.get(Customers.class, 1L);
+        System.out.println(user.getOrders());
+        session.getTransaction().commit();
+
+    }
+
+    @Test
+    @SneakyThrows
+    public void testHibernateAPI() {
 //        var customers = Customers.builder()
-//                .fullName("Машка Сашка")
-//                .registeredAt(LocalDate.of(2024, 1, 12))
-//                .city("Гомель")
-//                .email("rekwl@gmail.com")
+//                .fullName("Василий gdg")
+//                .customersInfo(CustomersInfo.builder()
+//                        .registeredAt(new Registered(LocalDate.now()))
+//                        .city("Гомель")
+//                        .email("reklwos@gmail.com")
+//                        .build())
 //                .id(19L)
+//                .role(Role.ADMIN)
 //                .build();
 //
 //        var sql = """
@@ -70,5 +133,5 @@ class HibernateRunnerTest {
 //        statement.executeUpdate();
 //        statement.close();
 //        connection.close();
-//    }
+    }
 }

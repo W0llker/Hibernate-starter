@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<log4j:configuration>
+    <!--Класс который отвечает за вывод куда будут писаться логи -->
+    <appender name="console" class="org.apache.log4j.ConsoleAppender">
+        <!--Через sout будет выводиться логи -->
+        <param name="target" value="System.out"/>
+        <!--Паттерн для вывода логов -->
+        <layout class="org.apache.log4j.PatternLayout">
+            <!--%d{HH:mm:ss,SSS} дата  %p уровень логирования %с класс в котором ошибка %L строка кода %m%n сообщение об ошибке-->
+            <param name="conversionPattern" value="[%d{HH:mm:ss,SSS}] %p [%c: %L] %m%n"/>
+        </layout>
+
+    </appender>
+
+    <!--appender для файла логов -->
+    <appender name="file" class="org.apache.log4j.RollingFileAppender">
+        <!--тут можно указать любую директорию для хранения логов -->
+        <param name="file" value="hibernate-starter.log"/>
+
+        <param name="append" value="true"/>
+        <param name="maxFileSize" value="10KB"/>
+        <param name="maxBackupIndex" value="10"/>
+
+        <layout class="org.apache.log4j.PatternLayout">
+            <!--%d{HH:mm:ss,SSS} дата  %p уровень логирования %с класс в котором ошибка %L строка кода %m%n сообщение об ошибке-->
+            <param name="conversionPattern" value="[%d{HH:mm:ss,SSS}] %p [%c: %L] %m%n"/>
+        </layout>
+
+        <filter class="org.apache.log4j.varia.LevelRangeFilter">
+            <param name="LevelMin" value="ALL"/>
+        </filter>
+
+    </appender>
+
+
+    <root>
+        <level value="info"/>
+        <appender-ref ref="console"/>
+        <appender-ref ref="file"/>
+    </root>
+
+</log4j:configuration>
