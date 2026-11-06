@@ -1,9 +1,6 @@
 package org.example.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.example.converter.RegisteredConverter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -33,7 +30,7 @@ public class Customers {
     private CustomersInfo customersInfo;
     @Enumerated(EnumType.STRING)
     private Role role;
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "customer")
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
 //    @PrimaryKeyJoinColumn  -> альтернатива JoinColumn для РК
     @JoinColumn(name = "customer_id")
 //    @OnDelete(action = OnDeleteAction.CASCADE)

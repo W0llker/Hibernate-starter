@@ -1,12 +1,10 @@
 package org.example.entity;
 
 import lombok.*;
-import org.hibernate.annotations.ColumnTransformer;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 
 @Data
 @Builder
@@ -18,9 +16,9 @@ import java.util.List;
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long Id;
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "id")
+    private long id;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id")
     private Customers customer;
     @Enumerated(EnumType.STRING)
     private Status status;

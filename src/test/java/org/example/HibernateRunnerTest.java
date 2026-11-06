@@ -4,18 +4,15 @@ import lombok.Cleanup;
 import lombok.SneakyThrows;
 import org.example.entity.*;
 import org.example.util.HibernateUtil;
+import org.h2.engine.User;
 import org.junit.jupiter.api.Test;
 
-import javax.persistence.Column;
-import javax.persistence.Table;
-import java.lang.reflect.Field;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
+
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 
 class HibernateRunnerTest {
@@ -36,6 +33,60 @@ class HibernateRunnerTest {
 //        return result;
 //    }
 
+    @Test
+    public void getProductAndCategory() {
+        @Cleanup
+        var sessionFactory = HibernateUtil.buildSessionFactory();
+        @Cleanup
+        var session = sessionFactory.openSession();
+
+        session.beginTransaction();
+//        var product = session.createQuery("from Products").list();
+//        System.out.println(product);
+        System.out.println("***************************************");
+        var pr = session.createQuery("from Categories c where c.id = 1", Categories.class).list();
+        System.out.println(pr);
+
+    }
+
+    @Test
+    public void checkH2() {
+
+        @Cleanup
+        var sessionFactory = HibernateUtil.buildSessionFactory();
+        @Cleanup
+        var session = sessionFactory.openSession();
+
+        session.beginTransaction();
+        //Вывод HQL
+//        var customers = session.createQuery("select c from Customers c").list();
+//        System.out.println(customers.toString());
+
+        //CriteriaBuilder
+//        CriteriaBuilder cb = session.getCriteriaBuilder();
+//        CriteriaQuery<Customers> criteriaQuery = cb.createQuery(Customers.class);
+//        criteriaQuery.select(criteriaQuery.from(Customers.class));
+//        var customers = session.createQuery(criteriaQuery).list();
+        //Обычный SQL
+//        var customers = session.createNativeQuery("SELECT * FROM customers", Customers.class).list();
+
+        long id = 3;
+        //todo 1 вариант типизации
+//        var customers = session.createQuery("select c from Customers c where c.id = ?1", Customers.class)
+//                .setParameter(1, id)
+//                .getSingleResult();
+        //todo 2 вариант типизации
+//        var cust = session.createQuery("select c from Customers c where c.id = :id", Customers.class)
+//                .setParameter("id", id)
+//                .getResultList();
+        TypedQuery<Customers> customers = session.createQuery("from Customers c where c.id = :id", Customers.class)
+                .setParameter("id", id);
+        var customer = customers.getSingleResult();
+
+        System.out.println(customer);
+        session.getTransaction().commit();
+
+    }
 
     @Test
     void addNewCustomerAndOrder() {
@@ -54,13 +105,6 @@ class HibernateRunnerTest {
                         .build())
                 .id(19L)
                 .role(Role.ADMIN)
-                .build();
-
-        var order = Order.builder()
-                .status(Status.delivered)
-                .orderDate(LocalDate.now())
-                .totalAmount(null)
-                .customer(customers)
                 .build();
 
         session.getTransaction().commit();
