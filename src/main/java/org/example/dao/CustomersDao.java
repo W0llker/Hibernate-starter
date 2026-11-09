@@ -3,16 +3,21 @@ package org.example.dao;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.impl.JPAQuery;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.example.dto.OrdersFilter;
+import org.example.dto.QPredicate;
 import org.example.entity.Customers;
 import org.example.entity.Products;
 
 import org.example.entity.QCategories;
 import org.example.entity.QOrder;
+import org.example.util.HibernateUtil;
 import org.hibernate.Session;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -23,6 +28,14 @@ import static org.example.entity.QProducts.*;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CustomersDao {
     private static final CustomersDao INSTANCE = new CustomersDao();
+
+    public Customers addCustomers(Customers customers) {
+        var session = HibernateUtil.buildSessionFactory().openSession();
+        session.beginTransaction();
+        session.persist(customers);
+        session.getTransaction().commit();
+        return customers;
+    }
 
     public List<Customers> findAllWithQueryDSL(Session session) {
         return new JPAQuery<Customers>(session).select(customers).from(customers).fetch();
@@ -37,7 +50,6 @@ public class CustomersDao {
 
         return session.createQuery(criteria).list();
     }
-
 
 
     public List<Customers> findLimitedCustomersOrderByCreatedData(Session session, int limit) {
@@ -68,12 +80,44 @@ public class CustomersDao {
                 .fetch();
     }
 
-    public List<Tuple>  findByCustomersNameAndCountOrder(Session session) {
+    public List<Tuple> findByCustomersNameAndCountOrder(Session session) {
         return new JPAQuery<Tuple>(session)
                 .select(customers.fullName, QOrder.order.id.count())
                 .from(QOrder.order)
                 .join(QOrder.order.customer(), customers)
                 .groupBy(customers.fullName)
+                .fetch();
+    }
+
+    public List<Tuple> findByCustomersNameAndCountOrderWithHaving(Session session) {
+        return new JPAQuery<Tuple>(session)
+                .select(customers.fullName, QOrder.order.id.count())
+                .from(QOrder.order)
+                .join(QOrder.order.customer(), customers)
+                .groupBy(customers.fullName)
+                .having(QOrder.order.count().gt(
+                        new JPAQuery<Integer>(session)
+                                .select(QOrder.order.id.avg())
+                                .from(QOrder.order)
+                ))
+                .fetch();
+    }
+
+    public List<Customers> findAllByName(Session session, OrdersFilter filter) {
+        /* List<Predicate> predicates = new ArrayList<>();
+        //для всего фильтра нужно указать так
+        if (filter.getFullName() != null && !filter.getFullName().equals(""))
+            predicates.add(customers.fullName.eq(filter.getFullName()));\
+         */
+
+        var predicates = QPredicate.builder()
+                .add(filter.getFullName(), customers.fullName::eq)
+                .buildAnd();
+
+        return new JPAQuery<Customers>(session)
+                .select(customers)
+                .from(customers)
+                .where(predicates)
                 .fetch();
     }
 

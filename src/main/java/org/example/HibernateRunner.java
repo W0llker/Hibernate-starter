@@ -1,18 +1,47 @@
 package org.example;
 
 
+import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
+import org.example.dao.CustomersDao;
+import org.example.dto.CustomersRequest;
 import org.example.entity.*;
+import org.example.mapper.CustomerMapper;
+import org.example.service.ServiceCustomers;
 import org.example.util.HibernateUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import javax.persistence.LockModeType;
 import java.time.LocalDate;
 
 @Slf4j
 public class HibernateRunner {
+    static void main(String[] args) {
+        ServiceCustomers serviceCustomers = new ServiceCustomers(CustomersDao.getInstance()
+                , new CustomerMapper());
 
-    static void main() {
+        CustomersRequest request = new CustomersRequest("Вася репкин", CustomersInfo.builder()
+                .registeredAt(new Registered(LocalDate.now()))
+                .city("Гомель")
+                .email("reklwos@gmail.com")
+                .build());
+        serviceCustomers.addCustomer(request);
+
+
+    }
+
+    static void test() {
+
+
+        @Cleanup
+        var sessions = HibernateUtil.buildSessionFactory().openSession();
+        sessions.beginTransaction();
+        var categories = sessions.find(Categories.class, 1L, LockModeType.PESSIMISTIC_READ);
+//        sessions.lock(categories, LockModeType.OPTIMISTIC);
+//        sessions.createQuery("select c from Categories c where c.id = 1L").setLockMode(LockModeType.OPTIMISTIC);
+        System.out.println(categories);
+
+        sessions.getTransaction().commit();
+
         //TRANSIENT
         var customers = Customers.builder()
                 .fullName("Машка 1231")
@@ -32,31 +61,30 @@ public class HibernateRunner {
                 .customer(customers)
                 .build();
 
-
         try (var sessionFactory = HibernateUtil.buildSessionFactory()) {
-        // todo Работа с пользователем
+            // todo Работа с пользователем
 //
 //            try (var sessionOne = sessionFactory.openSession()) {
 //                sessionOne.beginTransaction();
 //                //Persistent к session1, но Transient к session2
-//                sessionOne.save(customers);
+//                sessionOne.save(categories);
 //
-//                customers.setFullName("Вы аыа");
-//                log.warn("Customers update: {}", customers);
+//                categories.setFullName("Вы аыа");
+//                log.warn("Customers update: {}", categories);
 //                //загружает измененные данные в бд
-////                sessionOne.merge(customers);
+////                sessionOne.merge(categories);
 //                //обновляет данные из бд если вдруг мы поменяли что либо
-////                sessionOne.refresh(customers);
+////                sessionOne.refresh(categories);
 //                //проверяет есть ли измененные данные, но не засинхронизированные с БД,
 //                // но если пользователя нету в кэше то нету смысла какого либо от это метода
 //                sessionOne.isDirty();
-//                log.debug("Customers : {}, session {}", customers, sessionOne);
+//                log.debug("Customers : {}, session {}", categories, sessionOne);
 //                sessionOne.getTransaction().commit();
 //            }
 //            try (var sessionTwo = sessionFactory.openSession()) {
 //                sessionTwo.beginTransaction();
 //                //Сначала GET -> DELETE PERSISTENT k session2 DETACHED k session1
-//                sessionTwo.delete(customers);
+//                sessionTwo.delete(categories);
 //                //REMOVED k session2
 //                sessionTwo.getTransaction().commit();
 //            }
@@ -65,7 +93,7 @@ public class HibernateRunner {
                 session.beginTransaction();
                 var orderTest = session.get(Order.class, 11L);
                 System.out.println(orderTest);
-//                session.save(customers);
+//                session.save(categories);
 //                session.save(order);;
                 session.getTransaction().commit();
             }

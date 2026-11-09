@@ -8,6 +8,7 @@ import org.h2.engine.User;
 import org.junit.jupiter.api.Test;
 
 
+import javax.persistence.EntityGraph;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -43,10 +44,39 @@ class HibernateRunnerTest {
         session.beginTransaction();
 //        var product = session.createQuery("from Products").list();
 //        System.out.println(product);
-        System.out.println("***************************************");
-        var pr = session.createQuery("from Categories c where c.id = 1", Categories.class).list();
-        System.out.println(pr);
 
+        session.enableFetchProfile("orders");
+        var testCustomers = session.get(Customers.class, 1L);
+        System.out.println(testCustomers);
+
+        System.out.println("***************************************");
+        var result = session.createQuery("select p from Products p join fetch p.category",
+                Products.class).list();
+        System.out.println(result);
+        session.getTransaction().commit();
+
+    }
+
+    @Test
+    public void getAllCustomersWithEntityGraph() {
+
+        @Cleanup
+        var sessionFactory = HibernateUtil.buildSessionFactory();
+
+//        var graph = sessionFactory.createEntityManager().createEntityGraph(Customers.class);
+//        graph.addSubgraph("orders");
+
+        @Cleanup
+        var session = sessionFactory.openSession();
+        session.beginTransaction();
+
+        EntityGraph<Customers> graph = (EntityGraph<Customers>) session
+                .getEntityGraph("customers_with_order");
+
+        var result = session.createQuery("select p from Customers p")
+                .setHint("javax.persistence.fetchgraph", graph)
+                .list();
+        System.out.println(result);
     }
 
     @Test

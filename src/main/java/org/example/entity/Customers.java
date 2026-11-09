@@ -2,19 +2,28 @@ package org.example.entity;
 
 import lombok.*;
 import org.example.converter.RegisteredConverter;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.*;
 
 import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.Table;
 import java.time.LocalDate;
 import java.util.List;
 
+@FetchProfile(name = "withOrders", fetchOverrides = {
+        @FetchProfile.FetchOverride(entity = Customers.class, association = "orders", mode = FetchMode.JOIN)
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Entity
 @Table(name = "customers")
+@NamedEntityGraph(name = "customers_with_order",
+        attributeNodes = {
+                @NamedAttributeNode("orders")
+        })
 public class Customers {
     @Id
     @GeneratedValue(generator = "customers_generator", strategy = GenerationType.SEQUENCE)
@@ -30,9 +39,11 @@ public class Customers {
     private CustomersInfo customersInfo;
     @Enumerated(EnumType.STRING)
     private Role role;
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
-//    @PrimaryKeyJoinColumn  -> альтернатива JoinColumn для РК
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    //    @PrimaryKeyJoinColumn  -> альтернатива JoinColumn для РК
     @JoinColumn(name = "customer_id")
-//    @OnDelete(action = OnDeleteAction.CASCADE)
+    @BatchSize(size = 5)
+//        @Fetch(FetchMode.SELECT)
+    //    @OnDelete(action = OnDeleteAction.CASCADE)
     private List<Order> orders;
 }
